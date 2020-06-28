@@ -53,19 +53,30 @@ def main():
 		'Snow',
 		'Carts',
 	]
+	my_categories = [
+		'Women',
+		'Corpses',
+		'German soldiers',
+		'Armband',
+		'Snow',
+		'Carts',
+	]
+	
 	image_categories = sorted(image_categories)
 	all_csvs = glob.glob('./csv/*.csv')
 	all_csvs = sorted(all_csvs)
 	image_dictionary = dict(zip(image_categories, all_csvs))
 	for category in image_dictionary:
-		category_dataset = pd.read_csv(image_dictionary[category])
-		category_dataset.sort_values("url", inplace=True)
-		category_dataset.drop_duplicates(subset="url", inplace=True)
+		if category in my_categories:
+			category_dataset = pd.read_csv(image_dictionary[category])
+			category_dataset.sort_values("url", inplace=True)
+			category_dataset.drop_duplicates(subset="url", inplace=True)
 
-		counter = 0
-		for index, row in category_dataset.iterrows():
-			url_to_image(row['url'], category, counter, category_dataset.shape[0])
-			counter += 1
+			print(category, category_dataset.shape[0])
+			counter = 0
+			for index, row in category_dataset.iterrows():
+				url_to_image(row['url'], category, counter, category_dataset.shape[0])
+				counter += 1
 
 
 if __name__ == "__main__":
