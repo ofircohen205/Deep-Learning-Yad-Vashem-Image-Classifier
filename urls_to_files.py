@@ -19,12 +19,12 @@ def url_to_image(url, category, index, size):
 			os.makedirs(category_folder_train)
 		file_name = category_folder_train + "/{}_{}.jpg".format(category, index)
 		print(file_name)
-	elif index < int(0.9 * size) and index > int(0.8 * size):
+	elif index < int(0.9 * size) and index >= int(0.8 * size):
 		if not os.path.exists(category_folder_validation):
 			os.makedirs(category_folder_validation)
 		file_name = category_folder_validation + "/{}_{}.jpg".format(category, index)
 		print(file_name)
-	else:
+	elif index < size and index >= int(0.9 * size):
 		if not os.path.exists(category_folder_test):
 			os.makedirs(category_folder_test)
 		file_name = category_folder_test + "/{}_{}.jpg".format(category, index)
