@@ -30,7 +30,8 @@ def url_to_image(url, category, index, size):
 				os.makedirs(category_folder_test)
 			file_name = category_folder_test + "/{}_{}.jpg".format(category, index)
 			print(file_name)
-		cv2.imwrite(file_name, img)
+		if not os.path.exists(file_name):
+			cv2.imwrite(file_name, img)
 	except:
 		pass
 	''' End Function '''
@@ -57,12 +58,7 @@ def main():
 		'Carts',
 	]
 	my_categories = [
-		'Women',
-		'Corpses',
-		'German soldiers',
-		'Armband',
-		'Snow',
-		'Carts',
+		'Children'
 	]
 	
 	image_categories = sorted(image_categories)
