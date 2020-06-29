@@ -6,30 +6,33 @@ import pandas as pd
 from urllib.request import urlopen
 
 def url_to_image(url, category, index, size):
-	req = urlopen(url)
-	arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-	img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-	img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-	category = category.replace(" ", "_")
-	category_folder_train = "./data/train/{}".format(category)
-	category_folder_validation = "./data/validation/{}".format(category)
-	category_folder_test = "./data/test/{}".format(category)
-	if index < int(0.8 * size):
-		if not os.path.exists(category_folder_train):
-			os.makedirs(category_folder_train)
-		file_name = category_folder_train + "/{}_{}.jpg".format(category, index)
-		print(file_name)
-	elif index < int(0.9 * size) and index >= int(0.8 * size):
-		if not os.path.exists(category_folder_validation):
-			os.makedirs(category_folder_validation)
-		file_name = category_folder_validation + "/{}_{}.jpg".format(category, index)
-		print(file_name)
-	elif index < size and index >= int(0.9 * size):
-		if not os.path.exists(category_folder_test):
-			os.makedirs(category_folder_test)
-		file_name = category_folder_test + "/{}_{}.jpg".format(category, index)
-		print(file_name)
-	cv2.imwrite(file_name, img)
+	try:
+		req = urlopen(url)
+		arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+		img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+		category = category.replace(" ", "_")
+		category_folder_train = "./data/train/{}".format(category)
+		category_folder_validation = "./data/validation/{}".format(category)
+		category_folder_test = "./data/test/{}".format(category)
+		if index < int(0.8 * size):
+			if not os.path.exists(category_folder_train):
+				os.makedirs(category_folder_train)
+			file_name = category_folder_train + "/{}_{}.jpg".format(category, index)
+			print(file_name)
+		elif index < int(0.9 * size) and index >= int(0.8 * size):
+			if not os.path.exists(category_folder_validation):
+				os.makedirs(category_folder_validation)
+			file_name = category_folder_validation + "/{}_{}.jpg".format(category, index)
+			print(file_name)
+		elif index < size and index >= int(0.9 * size):
+			if not os.path.exists(category_folder_test):
+				os.makedirs(category_folder_test)
+			file_name = category_folder_test + "/{}_{}.jpg".format(category, index)
+			print(file_name)
+		cv2.imwrite(file_name, img)
+	except:
+		pass
 	''' End Function '''
 
 def main():
