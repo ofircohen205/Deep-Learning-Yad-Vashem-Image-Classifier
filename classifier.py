@@ -304,19 +304,52 @@ def fit_predict_overfitting(classifier):
 def main():
     train_generator, validation_generator, test_generator = generators()
     class_weight_dict = generate_class_weights(train_generator)
-    X, Y = train_generator.next()
+    
     # Set ResNet to be base model
     base_model = ResNet50(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
+    
     # Freeze all base model layers
     for layer in base_model.layers:
         layer.trainable = False
 
-    # Set optimizer SGD and loss function to be CategoricalCrossentropy
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
+    print("Transfer learning")
     fit_predict_overfitting(classifier)
+    
+    for layer in classifier.layers[:LAYERS_TO_FREEZE]:
+        layer.trainable = False
+        
+    for layer in classifier.layers[LAYERS_TO_FREEZE:]:
+        layer.trainable = True
+    
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.summary()
+    
+    print("Fine Tuning")
+    fit_predict_overfitting(classifier)
+    
+    # # Freeze all base model layers
+    # for layer in base_model.layers:
+    #     layer.trainable = False
+
+    # classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    # classifier.summary()
+    
+    # print("Transfer learning")
+    # fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
+    
+    # for layer in classifier.layers[:LAYERS_TO_FREEZE]:
+    #     layer.trainable = False
+        
+    # for layer in classifier.layers[LAYERS_TO_FREEZE:]:
+    #     layer.trainable = True
+    
+    # classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    # classifier.summary()
+    
     # fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
 
 
