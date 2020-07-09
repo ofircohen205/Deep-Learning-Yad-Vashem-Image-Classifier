@@ -13,6 +13,7 @@ def url_to_image(url, category, index, size):
 		img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
 		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		category = category.replace(" ", "_")
+		print(getpass.getuser)
 		if getpass.getuser() == 'assafsh':
 			category_folder_train = "/mnt/data/Storage/DeepLearningFinalProject/data/train/{}".format(category)
 			category_folder_validation = "/mnt/data/Storage/DeepLearningFinalProject//data/validation/{}".format(category)
