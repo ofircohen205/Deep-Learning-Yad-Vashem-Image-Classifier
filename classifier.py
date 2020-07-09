@@ -1,7 +1,7 @@
 #############################################################################################################
 ################################################## IMPORTS ##################################################
 #############################################################################################################
-from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
+from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD
@@ -16,6 +16,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import getpass
 
 
 ##############################################################################################################
@@ -30,15 +31,20 @@ classes = sorted(classes)
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS = 50
 BS = 32
-FC_SIZE = 4096
+FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 LAYERS_TO_FREEZE = 249
 SEED=42
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-train_directory = os.path.join(BASE_DIR, "data/train")
-validation_directory = os.path.join(BASE_DIR, "data/validation")
-test_directory = os.path.join(BASE_DIR, "data/test")
+if getpass.getuser() == 'assafsh':
+    train_directory = "/mnt/data/Storage/DeepLearningFinalProject/data/train"
+    validation_directory = "/mnt/data/Storage/DeepLearningFinalProject/data/validation"
+    test_directory = "/mnt/data/Storage/DeepLearningFinalProject/data/test"
+else:
+    train_directory = os.path.join(BASE_DIR, "data/train")
+    validation_directory = os.path.join(BASE_DIR, "data/validation")
+    test_directory = os.path.join(BASE_DIR, "data/test")
 
 
 ###############################################################################################################
@@ -153,6 +159,7 @@ def create_classifier(base_model):
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
     x = Dense(FC_SIZE, activation='relu')(x)
+    x = Dense(FC_SIZE//2, activation='relu')(x)
     predictions = Dense(NUM_CLASSES, activation='softmax')(x)
 
     # Create the model
@@ -210,7 +217,7 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
 ''' End function '''
 
 
-def fit_predict_overfitting(classifier):
+def fit_predict_overfitting(classifier, number):
     '''
     Input: classifier
     Output: train on 80 images per class, validate on 10 and test on 10.
@@ -281,7 +288,15 @@ def fit_predict_overfitting(classifier):
     X_test = np.array(X_test) / 255.0
     Y_test = np.array(Y_test)
     
-    history = classifier.fit(X_train, Y_train, epochs=EPOCHS, validation_data=(X_validation, Y_validation), shuffle=True)
+    history = classifier.fit(
+        X_train,
+        Y_train,
+        steps_per_epoch=X_train.shape[0] // BS,
+        epochs=EPOCHS,
+        validation_data=(X_validation, Y_validation),
+        validation_steps=X_validation.shape[0] // BS,
+        shuffle=True
+    )
     classifier.save_weights('train_overfitting.h5')
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
@@ -289,7 +304,16 @@ def fit_predict_overfitting(classifier):
     plt.ylabel("accuracy")
     plt.xlabel("epoch")
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig('./plots/accuracy_plot.png')
+    plt.savefig('./plots/accuracy_plot_{}.png'.format(number))
+    plt.clf()
+    
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title("model loss")
+    plt.ylabel("loss")
+    plt.xlabel("epoch")
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.savefig('./plots/loss_plot_{}.png'.format(number))
     plt.clf()
     
     history_without_base_model_return_value = classifier.evaluate(X_validation, Y_validation)
@@ -306,7 +330,7 @@ def main():
     class_weight_dict = generate_class_weights(train_generator)
     
     # Set ResNet to be base model
-    base_model = ResNet50(weights="imagenet", include_top=False)
+    base_model = ResNet50V2(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
     
     # Freeze all base model layers
@@ -317,19 +341,16 @@ def main():
     classifier.summary()
     
     print("Transfer learning")
-    fit_predict_overfitting(classifier)
+    fit_predict_overfitting(classifier, 0)
     
-    for layer in classifier.layers[:LAYERS_TO_FREEZE]:
-        layer.trainable = False
-        
-    for layer in classifier.layers[LAYERS_TO_FREEZE:]:
+    for layer in base_model.layers:
         layer.trainable = True
     
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Fine Tuning")
-    fit_predict_overfitting(classifier)
+    fit_predict_overfitting(classifier, 1)
     
     # # Freeze all base model layers
     # for layer in base_model.layers:
@@ -341,10 +362,7 @@ def main():
     # print("Transfer learning")
     # fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
     
-    # for layer in classifier.layers[:LAYERS_TO_FREEZE]:
-    #     layer.trainable = False
-        
-    # for layer in classifier.layers[LAYERS_TO_FREEZE:]:
+    # for layer in classifier.layers:
     #     layer.trainable = True
     
     # classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])

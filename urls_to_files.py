@@ -2,6 +2,7 @@ from datetime import datetime
 import time, cv2, itertools, os, json, glob
 import numpy as np
 import pandas as pd
+import getpass
 
 from urllib.request import urlopen
 
@@ -12,9 +13,14 @@ def url_to_image(url, category, index, size):
 		img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
 		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		category = category.replace(" ", "_")
-		category_folder_train = "./data/train/{}".format(category)
-		category_folder_validation = "./data/validation/{}".format(category)
-		category_folder_test = "./data/test/{}".format(category)
+		if getpass.getuser() == 'assafsh':
+			category_folder_train = "/mnt/data/Storage/DeepLearningFinalProject/data/train/{}".format(category)
+			category_folder_validation = "/mnt/data/Storage/DeepLearningFinalProject//data/validation/{}".format(category)
+			category_folder_test = "/mnt/data/Storage/DeepLearningFinalProject//data/test/{}".format(category)
+		else:
+			category_folder_train = "./data/train/{}".format(category)
+			category_folder_validation = "./data/validation/{}".format(category)
+			category_folder_test = "./data/test/{}".format(category)
 		if index < int(0.8 * size):
 			if not os.path.exists(category_folder_train):
 				os.makedirs(category_folder_train)
