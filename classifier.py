@@ -37,11 +37,10 @@ LAYERS_TO_FREEZE = 249
 SEED=42
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-print(getpass.getuser())
 if getpass.getuser() == 'assafsh':
-    train_directory = "/mnt/data/Storage/DeepLearningFinalProject/data/train"
-    validation_directory = "/mnt/data/Storage/DeepLearningFinalProject/data/validation"
-    test_directory = "/mnt/data/Storage/DeepLearningFinalProject/data/test"
+    train_directory = "/mnt/data/Storage/yad-vashem-dataset/data/train"
+    validation_directory = "/mnt/data/Storage/yad-vashem-dataset/data/validation"
+    test_directory = "/mnt/data/Storage/yad-vashem-dataset/data/test"
 else:
     train_directory = os.path.join(BASE_DIR, "data/train")
     validation_directory = os.path.join(BASE_DIR, "data/validation")
