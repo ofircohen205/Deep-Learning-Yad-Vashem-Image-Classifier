@@ -14,9 +14,9 @@ def url_to_image(url, category, index, size):
 		img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 		category = category.replace(" ", "_")
 		if getpass.getuser() == 'assafsh':
-			category_folder_train = "/mnt/data/Storage/yad-vashem-dataset/data/train/{}".format(category)
-			category_folder_validation = "/mnt/data/Storage/yad-vashem-dataset/data/validation/{}".format(category)
-			category_folder_test = "/mnt/data/Storage/yad-vashem-dataset/data/test/{}".format(category)
+			category_folder_train = "./mnt/data/Storage/yad-vashem-dataset/data/train/{}".format(category)
+			category_folder_validation = "./mnt/data/Storage/yad-vashem-dataset/data/validation/{}".format(category)
+			category_folder_test = "./mnt/data/Storage/yad-vashem-dataset/data/test/{}".format(category)
 		else:
 			category_folder_train = "./data/train/{}".format(category)
 			category_folder_validation = "./data/validation/{}".format(category)
