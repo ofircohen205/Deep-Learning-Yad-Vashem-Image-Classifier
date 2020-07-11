@@ -312,19 +312,20 @@ def main():
     for layer in base_model.layers:
         layer.trainable = False
 
-    classifier.compile(optimizer=Adam(), loss=CategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Transfer learning")
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
+    fit_predict_overfitting(classifier, 0)
     
-    for layer in classifier.layers:
+    for layer in base_model.layers:
         layer.trainable = True
     
-    classifier.compile(optimizer=Adam(), loss=CategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
+    print("Fine Tuning")
+    fit_predict_overfitting(classifier, 1)
 
 
 if __name__ == "__main__":
