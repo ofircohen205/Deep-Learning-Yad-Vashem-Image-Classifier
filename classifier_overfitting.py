@@ -19,9 +19,9 @@ import matplotlib.pyplot as plt
 import os
 import getpass
 
-from trains import Task
-task = Task.init(project_name="DL_CNN_Final_Project", task_name="Overfitting_Model")
-logger = task.get_logger()
+# from trains import Task
+# task = Task.init(project_name="DL_CNN_Final_Project", task_name="Overfitting_Model")
+# logger = task.get_logger()
 
 ##############################################################################################################
 ################################################## SETTINGS ##################################################
