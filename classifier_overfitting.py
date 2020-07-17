@@ -10,6 +10,7 @@ from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report, confusion_matrix
 from keras import backend as K
 from random import shuffle
 import tensorflow as tf
@@ -18,6 +19,9 @@ import matplotlib.pyplot as plt
 import os
 import getpass
 
+from trains import Task
+task = Task.init(project_name="DL_CNN_Final_Project", task_name="Overfitting_Model")
+logger = task.get_logger()
 
 ##############################################################################################################
 ################################################## SETTINGS ##################################################
@@ -168,30 +172,6 @@ def create_classifier(base_model):
 ''' End function '''
 
 
-def fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict):
-    '''
-    Input:
-    Output:
-    '''
-    history_without_base_model = classifier.fit(
-        train_generator,
-        steps_per_epoch=train_generator.n // train_generator.batch_size,
-        epochs=EPOCHS_SMALL,
-        validation_data=validation_generator,
-        validation_steps=validation_generator.n // validation_generator.batch_size,
-        class_weight=class_weight_dict
-    )
-    
-    classifier.save_weights('train_without_base_model.h5')
-    print("====================================================")
-
-    history_without_base_model_return_value = classifier.evaluate_generator(test_generator)
-    print("model evaulation on test:")
-    print(history_without_base_model_return_value)
-    print("====================================================")
-''' End function '''
-
-
 def fit_predict_overfitting(classifier, number):
     '''
     Input: classifier
@@ -279,7 +259,7 @@ def fit_predict_overfitting(classifier, number):
     plt.ylabel("accuracy")
     plt.xlabel("epoch")
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig('./plots/accuracy_plot_{}.png'.format(number))
+    plt.savefig('./plots/overfitting_accuracy_plot_{}.png'.format(number))
     plt.clf()
     
     plt.plot(history.history['loss'])
@@ -288,7 +268,7 @@ def fit_predict_overfitting(classifier, number):
     plt.ylabel("loss")
     plt.xlabel("epoch")
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig('./plots/loss_plot_{}.png'.format(number))
+    plt.savefig('./plots/overfitting_loss_plot_{}.png'.format(number))
     plt.clf()
     
     history_without_base_model_return_value = classifier.evaluate(X_validation, Y_validation)

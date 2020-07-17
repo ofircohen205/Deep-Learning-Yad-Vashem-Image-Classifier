@@ -9,6 +9,7 @@ from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCr
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
 from sklearn.utils.class_weight import compute_class_weight
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from keras import backend as K
 from random import shuffle
@@ -18,6 +19,9 @@ import matplotlib.pyplot as plt
 import os
 import getpass
 
+from trains import Task
+task = Task.init(project_name="DL_CNN_Final_Project", task_name="Test_Model")
+logger = task.get_logger()
 
 ##############################################################################################################
 ################################################## SETTINGS ##################################################
@@ -30,7 +34,7 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS_LARGE = 50
-EPOCHS_SMALL = 10
+EPOCHS_SMALL = 40
 BS = 32
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
@@ -168,12 +172,12 @@ def create_classifier(base_model):
 ''' End function '''
 
 
-def fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict):
+def fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, number):
     '''
     Input:
     Output:
     '''
-    history_without_base_model = classifier.fit(
+    history = classifier.fit(
         train_generator,
         steps_per_epoch=train_generator.n // train_generator.batch_size,
         epochs=EPOCHS_SMALL,
@@ -183,96 +187,6 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     )
     
     classifier.save_weights('train_without_base_model.h5')
-    print("====================================================")
-
-    history_without_base_model_return_value = classifier.evaluate_generator(test_generator)
-    print("model evaulation on test:")
-    print(history_without_base_model_return_value)
-    print("====================================================")
-''' End function '''
-
-
-def fit_predict_overfitting(classifier, number):
-    '''
-    Input: classifier
-    Output: train on 80 images per class, validate on 10 and test on 10.
-    '''
-    train_df, validation_df, test_df = [], [], []
-    categories_path_train, categories_path_validation, categories_path_test = [], [], []
-    
-    for category in classes:
-        if ' ' in category:
-            category = category.replace(" ", "_")
-        categories_path_train.append(os.path.join(train_directory, category))
-        categories_path_validation.append(os.path.join(validation_directory, category))
-        categories_path_test.append(os.path.join(test_directory, category))
-    
-    for class_num, path in enumerate(categories_path_train):
-        dir_path = os.listdir(path)
-        for i, child in enumerate(dir_path):
-            if i == 80:
-                break
-            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
-            x = img_to_array(img)
-            train_df.append([x, class_num])
-            
-    
-    for class_num, path in enumerate(categories_path_validation):
-        dir_path = os.listdir(path)
-        for i, child in enumerate(dir_path):
-            if i == 10:
-                break
-            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
-            x = img_to_array(img)
-            validation_df.append([x, class_num])
-    
-    for class_num, path in enumerate(categories_path_test):
-        dir_path = os.listdir(path)
-        for i, child in enumerate(dir_path):
-            if i == 10:
-                break
-            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
-            x = img_to_array(img)
-            test_df.append([x, class_num])
-    
-    shuffle(train_df)
-    shuffle(validation_df)
-    shuffle(test_df)
-
-    X_train, X_validation, X_test = [], [], []
-    Y_train, Y_validation, Y_test = [], [], []
-    
-    for image, label in train_df:
-        X_train.append(image)
-        Y_train.append(label)
-    
-    for image, label in validation_df:
-        X_validation.append(image)
-        Y_validation.append(label)
-    
-    for image, label in test_df:
-        X_test.append(image)
-        Y_test.append(label)
-    
-    X_train = np.array(X_train) / 255.0
-    Y_train = np.array(Y_train)
-    
-    X_validation = np.array(X_validation) / 255.0
-    Y_validation = np.array(Y_validation)
-    
-    X_test = np.array(X_test) / 255.0
-    Y_test = np.array(Y_test)
-    
-    history = classifier.fit(
-        X_train,
-        Y_train,
-        steps_per_epoch=X_train.shape[0] // BS,
-        epochs=EPOCHS_LARGE,
-        validation_data=(X_validation, Y_validation),
-        validation_steps=X_validation.shape[0] // BS,
-        shuffle=True
-    )
-    classifier.save_weights('train_overfitting.h5')
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
     plt.title("model accuracy")
@@ -290,10 +204,21 @@ def fit_predict_overfitting(classifier, number):
     plt.legend(['train', 'test'], loc='upper left')
     plt.savefig('./plots/loss_plot_{}.png'.format(number))
     plt.clf()
-    
-    history_without_base_model_return_value = classifier.evaluate(X_validation, Y_validation)
+    print("====================================================")
+
+    history_evaulate = classifier.evaluate_generator(validation_generator)
     print("model evaulation on test:")
-    print(history_without_base_model_return_value)
+    print(history_evaulate)
+    print("====================================================")
+    Y_pred = classifier.predict_generator(test_generator)
+    y_pred = np.argmax(Y_pred, axis=1)
+    
+    print("====================================================")    
+    print("Confusion matrix:")
+    print(confusion_matrix(test_generator.classes, y_pred))
+    print("====================================================")    
+    print("Classification report:")
+    print(classification_report(test_generator.classes, y_pred, target_names=classes))
 ''' End function '''
 
 
@@ -316,7 +241,7 @@ def main():
     classifier.summary()
     
     print("Transfer learning")
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
+    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
     
     for layer in classifier.layers:
         layer.trainable = True
@@ -324,7 +249,7 @@ def main():
     classifier.compile(optimizer=Adam(), loss=CategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict)
+    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
 
 
 if __name__ == "__main__":
