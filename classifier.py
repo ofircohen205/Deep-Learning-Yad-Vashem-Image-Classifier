@@ -4,7 +4,7 @@
 from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
@@ -34,7 +34,6 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS_LARGE = 50
-EPOCHS_SMALL = 40
 BS = 32
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
@@ -79,6 +78,7 @@ def generators():
     # Set train and test data generators
     train_datagen = ImageDataGenerator(
         preprocessing_function=preprocess_input,
+        rescale=1./255,
         rotation_range=30,
         width_shift_range=0.2,
         height_shift_range=0.2,
@@ -88,13 +88,7 @@ def generators():
     )
 
     test_datagen = ImageDataGenerator(
-        preprocessing_function=preprocess_input,
-        rotation_range=30,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True
+        rescale=1./255
     )
 
     # Get images from train directory and insert into generator
@@ -103,7 +97,8 @@ def generators():
         target_size=(IM_WIDTH, IM_HEIGHT),
         batch_size=BS,
         shuffle=True,
-        seed=SEED
+        seed=SEED,
+        class_mode='binary'
     )
 
     # Get images from validation directory and insert into generator
@@ -112,7 +107,8 @@ def generators():
         target_size=(IM_WIDTH, IM_HEIGHT),
         batch_size=BS,
         shuffle=True,
-        seed=SEED
+        seed=SEED,
+        class_mode='binary'
     )
 
     # Get images from test directory and insert into generator
@@ -121,7 +117,8 @@ def generators():
         target_size=(IM_WIDTH, IM_HEIGHT),
         batch_size=BS,
         shuffle=True,
-        seed=SEED
+        seed=SEED,
+        class_mode='binary'
     )
     return train_generator, validation_generator, test_generator
 ''' End function '''
@@ -177,13 +174,13 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     Input:
     Output:
     '''
-    history = classifier.fit(
+    history = classifier.fit_generator(
         train_generator,
         steps_per_epoch=train_generator.n // train_generator.batch_size,
-        epochs=EPOCHS_SMALL,
+        epochs=EPOCHS_LARGE,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
-        class_weight=class_weight_dict
+        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))]
     )
     
     classifier.save_weights('train_without_base_model.h5')
@@ -216,9 +213,13 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     print("====================================================")    
     print("Confusion matrix:")
     print(confusion_matrix(test_generator.classes, y_pred))
+    with open("confusion_matrix_{}".format(number), 'w') as f:
+        f.write(confusion_matrix(test_generator.classes, y_pred))
     print("====================================================")    
     print("Classification report:")
     print(classification_report(test_generator.classes, y_pred, target_names=classes))
+    with open("classification_report{}".format(number), 'w') as f:
+        f.write(classification_report(test_generator.classes, y_pred, target_names=classes))
 ''' End function '''
 
 
@@ -237,7 +238,7 @@ def main():
     for layer in base_model.layers:
         layer.trainable = False
 
-    classifier.compile(optimizer=Adam(), loss=CategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=RMSprop(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Transfer learning")
@@ -246,7 +247,7 @@ def main():
     for layer in classifier.layers:
         layer.trainable = True
     
-    classifier.compile(optimizer=Adam(), loss=CategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=RMSprop(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)

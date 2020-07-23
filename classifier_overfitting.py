@@ -4,7 +4,7 @@
 from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop
 from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
@@ -33,7 +33,7 @@ classes = [ 'Women', 'Children', 'Animals', 'Uniforms', 'Buildings', 'Street sce
 classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
-EPOCHS_LARGE = 50
+EPOCHS_LARGE = 25
 EPOCHS_SMALL = 10
 BS = 32
 FC_SIZE = 2048
@@ -79,6 +79,7 @@ def generators():
     # Set train and test data generators
     train_datagen = ImageDataGenerator(
         preprocessing_function=preprocess_input,
+        rescale=1./255,
         rotation_range=30,
         width_shift_range=0.2,
         height_shift_range=0.2,
@@ -88,13 +89,7 @@ def generators():
     )
 
     test_datagen = ImageDataGenerator(
-        preprocessing_function=preprocess_input,
-        rotation_range=30,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True
+        rescale=1./255
     )
 
     # Get images from train directory and insert into generator
@@ -292,7 +287,7 @@ def main():
     for layer in base_model.layers:
         layer.trainable = False
 
-    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=RMSprop(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Transfer learning")
@@ -301,7 +296,7 @@ def main():
     for layer in base_model.layers:
         layer.trainable = True
     
-    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=RMSprop(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Fine Tuning")
