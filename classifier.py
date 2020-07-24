@@ -4,7 +4,7 @@
 from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam, SGD, RMSprop
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
 from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
@@ -238,7 +238,7 @@ def main():
     for layer in base_model.layers:
         layer.trainable = False
 
-    classifier.compile(optimizer=RMSprop(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Nadam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Transfer learning")
@@ -247,7 +247,7 @@ def main():
     for layer in classifier.layers:
         layer.trainable = True
     
-    classifier.compile(optimizer=RMSprop(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Nadam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
