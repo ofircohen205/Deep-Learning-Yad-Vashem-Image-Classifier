@@ -1,7 +1,7 @@
 #############################################################################################################
 ################################################## IMPORTS ##################################################
 #############################################################################################################
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input, decode_predictions
+from tensorflow.keras.applications.resnet_v2 import ResNet50V2,  preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
@@ -18,7 +18,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import getpass
-import multiprocessing
 
 # from trains import Task
 # task = Task.init(project_name="DL_CNN_Final_Project", task_name="Test_Model")
@@ -35,11 +34,10 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS_LARGE = 50
-BS = 32
+BS = 64
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 SEED=42
-NUM_WORKERS = multiprocessing.cpu_count()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if getpass.getuser() == 'assafsh':
@@ -182,10 +180,7 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         epochs=EPOCHS_LARGE,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
-        max_queue_size=10,
-        workers=NUM_WORKERS,
-        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
-        use_multiprocessing=True
+        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))]
     )
     
     classifier.save_weights('train_without_base_model.h5')
