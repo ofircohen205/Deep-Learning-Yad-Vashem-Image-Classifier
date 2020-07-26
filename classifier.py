@@ -32,9 +32,9 @@ classes = [ 'Women', 'Children', 'Animals', 'Uniforms', 'Buildings', 'Street sce
         ]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 150, 150
+IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS_LARGE = 50
-BS = 8
+BS = 32
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 SEED=42
@@ -174,13 +174,15 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     Input:
     Output:
     '''
-    history = classifier.fit_generator(
+    history = classifier.fit(
         train_generator,
         steps_per_epoch=train_generator.n // train_generator.batch_size,
         epochs=EPOCHS_LARGE,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
-        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))]
+        workers=4,
+        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
+        use_multiprocessing=True
     )
     
     classifier.save_weights('train_without_base_model.h5')
