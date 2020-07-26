@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import getpass
+import multiprocessing
 
 # from trains import Task
 # task = Task.init(project_name="DL_CNN_Final_Project", task_name="Test_Model")
@@ -38,6 +39,7 @@ BS = 32
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 SEED=42
+NUM_WORKERS = multiprocessing.cpu_count()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if getpass.getuser() == 'assafsh':
@@ -180,7 +182,8 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         epochs=EPOCHS_LARGE,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
-        workers=4,
+        max_queue_size=10,
+        workers=NUM_WORKERS,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
         use_multiprocessing=True
     )
