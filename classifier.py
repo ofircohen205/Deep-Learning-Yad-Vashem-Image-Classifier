@@ -34,7 +34,7 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 150, 150
 EPOCHS_LARGE = 50
-BS = 16
+BS = 8
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 SEED=42
