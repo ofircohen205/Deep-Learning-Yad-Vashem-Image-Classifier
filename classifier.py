@@ -34,7 +34,7 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS_LARGE = 50
-BS = 128
+BS = 64
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 SEED=42
@@ -238,7 +238,7 @@ def main():
     for layer in base_model.layers:
         layer.trainable = False
 
-    classifier.compile(optimizer=Nadam(learning_rate=0.01), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Transfer learning")
@@ -247,7 +247,7 @@ def main():
     for layer in classifier.layers:
         layer.trainable = True
     
-    classifier.compile(optimizer=Nadam(learning_rate=0.01), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)

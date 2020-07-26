@@ -288,7 +288,7 @@ def main():
     for layer in base_model.layers:
         layer.trainable = False
 
-    classifier.compile(optimizer=Nadam(learning_rate=0.01), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Transfer learning")
@@ -297,7 +297,7 @@ def main():
     for layer in classifier.layers:
         layer.trainable = True
     
-    classifier.compile(optimizer=Nadam(learning_rate=0.01), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
     print("Fine Tuning")
