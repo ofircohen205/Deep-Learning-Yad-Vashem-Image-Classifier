@@ -32,7 +32,7 @@ classes = [ 'Women', 'Children', 'Animals', 'Uniforms', 'Buildings', 'Street sce
         ]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 200, 200
+IM_WIDTH, IM_HEIGHT = 150, 150
 EPOCHS_LARGE = 50
 BS = 16
 FC_SIZE = 2048
