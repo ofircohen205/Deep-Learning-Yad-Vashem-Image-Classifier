@@ -1,7 +1,7 @@
 #############################################################################################################
 ################################################## IMPORTS ##################################################
 #############################################################################################################
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2,  preprocess_input, decode_predictions
+from tensorflow.keras.applications.xception import Xception,  preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
@@ -47,8 +47,8 @@ classes = [ 'Animals',
         ]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 224, 224
-EPOCHS_LARGE = 50
+IM_WIDTH, IM_HEIGHT = 150, 150
+EPOCHS_LARGE = 30
 BS = 64
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
@@ -243,7 +243,7 @@ def main():
     class_weight_dict = generate_class_weights(train_generator)
     
     # Set ResNet to be base model
-    base_model = ResNet50V2(weights="imagenet", include_top=False)
+    base_model = Xception(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
     
     # Freeze all base model layers
