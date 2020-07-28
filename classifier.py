@@ -180,7 +180,8 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         epochs=EPOCHS_LARGE,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
-        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))]
+        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
+        use_multiprocessing=True
     )
     
     classifier.save_weights('train_without_base_model.h5')
@@ -203,11 +204,11 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     plt.clf()
     print("====================================================")
 
-    history_evaulate = classifier.evaluate_generator(validation_generator)
+    history_evaulate = classifier.evaluate(validation_generator)
     print("model evaulation on test:")
     print(history_evaulate)
     print("====================================================")
-    Y_pred = classifier.predict_generator(test_generator)
+    Y_pred = classifier.predict(test_generator)
     y_pred = np.argmax(Y_pred, axis=1)
     
     print("====================================================")    
