@@ -5,7 +5,7 @@ from tensorflow.keras.applications.resnet_v2 import ResNet50V2,  preprocess_inpu
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
-from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy
+from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy, Poisson
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
 from sklearn.utils.class_weight import compute_class_weight
@@ -16,7 +16,7 @@ from random import shuffle
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, math
 import getpass
 
 # from trains import Task
@@ -26,9 +26,24 @@ import getpass
 ##############################################################################################################
 ################################################## SETTINGS ##################################################
 ##############################################################################################################
-classes = [ 'Women', 'Children', 'Animals', 'Uniforms', 'Buildings', 'Street scene',
-            'Vehicles', 'Signs', 'Weapons', 'Railroad cars', 'Nazi symbols', 'Gravestones',
-            'Barbed wire fences', 'Corpses', 'German soldiers', 'Armband', 'Snow', 'Carts',
+classes = [ 'Animals',
+            'Armband',
+            'Barbed wire fences',
+            'Buildings',
+            'Carts',
+            'Children',
+            'Corpses',
+            'German Soldiers',
+            'Gravestones',
+            'Nazi Symbols',
+            'Railroad cars',
+            'Signs',
+            'Snow',
+            'Street scene',
+            "Uniforms",
+            "Vehicles",
+            'Weapons',
+            'Women',
         ]
 classes = sorted(classes)
 
@@ -53,23 +68,6 @@ else:
 ###############################################################################################################
 ################################################## FUNCTIONS ##################################################
 ############################################################################################################### 
-def focal_loss(alpha=0.25,gamma=2.0):
-    def focal_crossentropy(y_true, y_pred):
-        bce = K.binary_crossentropy(y_true, y_pred)
-        
-        y_pred = K.clip(y_pred, K.epsilon(), 1.- K.epsilon())
-        p_t = (y_true*y_pred) + ((1-y_true)*(1-y_pred))
-        
-        alpha_factor = 1
-        modulating_factor = 1
-
-        alpha_factor = y_true*alpha + ((1-alpha)*(1-y_true))
-        modulating_factor = K.pow((1-p_t), gamma)
-
-        # compute the final loss and return
-        return K.mean(alpha_factor*modulating_factor*bce, axis=-1)
-    return focal_crossentropy
-
 def generators():
     '''
     This function creates a generator for the dataset - generator for train, generator for validation and generator for test
@@ -129,24 +127,35 @@ def generate_class_weights(train_generator):
     Input:
     Output:
     '''
-    X, Y = train_generator.next()
-    # Instantiate the label encoder
-    le = LabelEncoder()
 
-    # Fit the label encoder to our label series
-    le.fit(list(classes))
+    labels_dict = {
+        'Animals': 1559,
+        'Armband':1779,
+        'Barbed wire fences':1080,
+        'Buildings':9052,
+        'Carts': 1540,
+        'Children': 16525,
+        'Corpses': 4606,
+        'German Soldiers': 2318,
+        'Gravestones': 5648,
+        'Nazi Symbols': 778,
+        'Railroad cars': 1018,
+        'Signs': 2038,
+        'Snow': 1716,
+        'Street scene': 7696,
+        "Uniforms": 12356,
+        "Vehicles": 3036,
+        'Weapons': 1260,
+        'Women': 27642
+    }
 
-    # Create integer based labels Series
-    y_integers = le.transform(list(classes))
-
-    #print y_integers
-    # Create dict of labels : integer representation
-    labels_and_integers = dict(zip(classes, y_integers))
-
-    print(labels_and_integers)
-    class_weights = compute_class_weight('balanced', np.unique(y_integers), y_integers)
-
-    class_weights_dict = dict(zip(le.transform(list(le.classes_)), class_weights))
+    class_weights_dict = dict()
+    total_samples = train_generator.n
+    mu = 0.15
+    for key in labels_dict.keys():
+        score = math.log(mu * total_samples / float(labels_dict[key]))
+        class_weights_dict[classes.index(key)] = score if score > 1.0 else 1.0
+    
     print(class_weights_dict)
     return class_weights_dict
 ''' End function '''
@@ -160,6 +169,7 @@ def create_classifier(base_model):
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
     x = Dense(FC_SIZE, activation='relu')(x)
+    x = Dropout(0.5)(x)
     x = Dense(FC_SIZE//2, activation='relu')(x)
     predictions = Dense(NUM_CLASSES, activation='softmax')(x)
 
@@ -180,7 +190,9 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         epochs=EPOCHS_LARGE,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
-        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))]
+        callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
+        use_multiprocessing=True,
+        class_weight=class_weight_dict
     )
     
     classifier.save_weights('train_without_base_model.h5')
@@ -203,11 +215,11 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     plt.clf()
     print("====================================================")
 
-    history_evaulate = classifier.evaluate_generator(validation_generator)
+    history_evaulate = classifier.evaluate(validation_generator)
     print("model evaulation on test:")
     print(history_evaulate)
     print("====================================================")
-    Y_pred = classifier.predict_generator(test_generator)
+    Y_pred = classifier.predict(test_generator)
     y_pred = np.argmax(Y_pred, axis=1)
     
     print("====================================================")    
