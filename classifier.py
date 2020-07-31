@@ -226,9 +226,6 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
 ################################################## MAIN ##################################################
 ##########################################################################################################
 def main():
-    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
-    
     tf.debugging.set_log_device_placement(True)
 
     strategy = tf.distribute.MirroredStrategy()

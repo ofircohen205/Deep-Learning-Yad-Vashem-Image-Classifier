@@ -275,9 +275,6 @@ def fit_predict_overfitting(classifier, number, class_weight_dict):
 ################################################## MAIN ##################################################
 ##########################################################################################################
 def main():
-    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
-    
     tf.debugging.set_log_device_placement(True)
 
     strategy = tf.distribute.MirroredStrategy()
