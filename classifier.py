@@ -229,31 +229,35 @@ def main():
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
     
-    train_generator, validation_generator, test_generator = generators()
-    class_weight_dict = generate_class_weights(train_generator)
-    
-    # Set ResNet to be base model
-    base_model = ResNet50V2(weights="imagenet", include_top=False)
-    classifier = create_classifier(base_model)
-    
-    # Freeze all base model layers
-    for layer in base_model.layers:
-        layer.trainable = False
+    tf.debugging.set_log_device_placement(True)
 
-    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
-    classifier.summary()
-    
-    print("Transfer learning")
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
-    
-    # Unfreeze all base model layers
-    for layer in base_model.layers:
-        layer.trainable = True
-    
-    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
-    classifier.summary()
-    
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
+    strategy = tf.distribute.MirroredStrategy()
+    with strategy.scope():
+        train_generator, validation_generator, test_generator = generators()
+        class_weight_dict = generate_class_weights(train_generator)
+        
+        # Set ResNet to be base model
+        base_model = ResNet50V2(weights="imagenet", include_top=False)
+        classifier = create_classifier(base_model)
+        
+        # Freeze all base model layers
+        for layer in base_model.layers:
+            layer.trainable = False
+
+        classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+        classifier.summary()
+        
+        print("Transfer learning")
+        fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
+        
+        # Unfreeze all base model layers
+        for layer in base_model.layers:
+            layer.trainable = True
+        
+        classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+        classifier.summary()
+        
+        fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
 
 
 if __name__ == "__main__":
