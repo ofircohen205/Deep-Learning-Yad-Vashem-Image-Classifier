@@ -248,8 +248,9 @@ def main():
     print("Transfer learning")
     fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
     
-    for index in range(29):
-        classifier.layers[index] = True
+    # Unfreeze all base model layers
+    for layer in base_model.layers:
+        layer.trainable = True
     
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
