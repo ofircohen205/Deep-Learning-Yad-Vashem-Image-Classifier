@@ -46,7 +46,7 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS = 30
-BATCH_SIZE = 64
+BATCH_SIZE = 256
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 
