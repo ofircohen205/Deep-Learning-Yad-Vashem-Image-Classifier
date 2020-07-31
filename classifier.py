@@ -238,7 +238,7 @@ def main():
     base_model = ResNet50V2(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
     
-    parallel_classifier = multi_gpu_model(classifier, gpus=8)
+    parallel_classifier = multi_gpu_model(classifier, gpus=4)
     
     # Freeze all base model layers
     for layer in base_model.layers:
