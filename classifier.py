@@ -12,6 +12,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from keras import backend as K
+from keras.util import multi_gpu_model
 from random import shuffle
 import tensorflow as tf
 import numpy as np
@@ -227,12 +228,17 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
 ################################################## MAIN ##################################################
 ##########################################################################################################
 def main():
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    
     train_generator, validation_generator, test_generator = generators()
     class_weight_dict = generate_class_weights(train_generator)
     
     # Set ResNet to be base model
     base_model = ResNet50V2(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
+    
+    parallel_classifier = multi_gpu_model(classifier, gpus=8)
     
     # Freeze all base model layers
     for layer in base_model.layers:
@@ -242,7 +248,7 @@ def main():
     classifier.summary()
     
     print("Transfer learning")
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
+    fit_predict(train_generator, validation_generator, test_generator, parallel_classifier, class_weight_dict, 0)
     
     for index in range(149):
         classifier.layers[index] = True
@@ -250,7 +256,7 @@ def main():
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
     
-    fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
+    fit_predict(train_generator, validation_generator, test_generator, parallel_classifier, class_weight_dict, 1)
 
 
 if __name__ == "__main__":

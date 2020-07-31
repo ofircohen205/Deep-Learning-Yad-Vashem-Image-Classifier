@@ -16,7 +16,7 @@ from random import shuffle
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, math
 import getpass
 
 # from trains import Task
@@ -274,12 +274,17 @@ def fit_predict_overfitting(classifier, number):
 ################################################## MAIN ##################################################
 ##########################################################################################################
 def main():
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    
     train_generator, validation_generator, test_generator = generators()
     class_weight_dict = generate_class_weights(train_generator)
     
     # Set ResNet to be base model
     base_model = ResNet50V2(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
+    
+    parallel_classifier = multi_gpu_model(classifier, gpus=8)
     
     # Freeze all base model layers
     for layer in base_model.layers:
@@ -289,7 +294,7 @@ def main():
     classifier.summary()
     
     print("Transfer learning")
-    fit_predict_overfitting(classifier, 0)
+    fit_predict_overfitting(parallel_classifier, 0)
     
     for index in range(149):
         classifier.layers[index] = True
@@ -298,7 +303,7 @@ def main():
     classifier.summary()
     
     print("Fine Tuning")
-    fit_predict_overfitting(classifier, 1)
+    fit_predict_overfitting(parallel_classifier, 1)
 
 
 if __name__ == "__main__":
