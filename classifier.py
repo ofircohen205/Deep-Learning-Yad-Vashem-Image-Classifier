@@ -179,7 +179,6 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
-        use_multiprocessing=True,
         class_weight=class_weight_dict
     )
     

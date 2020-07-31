@@ -164,7 +164,7 @@ def create_classifier(base_model):
 ''' End function '''
 
 
-def fit_predict_overfitting(classifier, number):
+def fit_predict_overfitting(classifier, number, class_weight_dict):
     '''
     Input: classifier
     Output: train on 80 images per class, validate on 10 and test on 10.
@@ -243,7 +243,8 @@ def fit_predict_overfitting(classifier, number):
         validation_data=(X_validation, Y_validation),
         validation_steps=X_validation.shape[0] // BATCH_SIZE,
         shuffle=True,
-        callbacks=[tf.keras.callbacks.CSVLogger('training_overfitting_{}.log'.format(number))]
+        callbacks=[tf.keras.callbacks.CSVLogger('training_overfitting_{}.log'.format(number))],
+        class_weight=class_weight_dict
     )
     classifier.save_weights('train_overfitting.h5')
     plt.plot(history.history['accuracy'])
@@ -292,7 +293,7 @@ def main():
     classifier.summary()
     
     print("Transfer learning")
-    fit_predict_overfitting(classifier, 0)
+    fit_predict_overfitting(classifier, 0, class_weight_dict)
     
     # Unfreeze all base model layers
     for layer in base_model.layers:
@@ -302,7 +303,7 @@ def main():
     classifier.summary()
     
     print("Fine Tuning")
-    fit_predict_overfitting(classifier, 1)
+    fit_predict_overfitting(classifier, 1, class_weight_dict)
 
 
 if __name__ == "__main__":
