@@ -12,7 +12,6 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix
 from keras import backend as K
-from keras.utils import multi_gpu_model
 from random import shuffle
 import tensorflow as tf
 import numpy as np
@@ -278,34 +277,31 @@ def main():
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
     
-    strategy = tf.distribute.MirroredStrategy()
+    train_generator, validation_generator, test_generator = generators()
+    class_weight_dict = generate_class_weights(train_generator)
+    
+    # Set ResNet to be base model
+    base_model = ResNet50V2(weights="imagenet", include_top=False)
+    classifier = create_classifier(base_model)
+    
+    # Freeze all base model layers
+    for layer in base_model.layers:
+        layer.trainable = False
 
-    with strategy.scope():
-        train_generator, validation_generator, test_generator = generators()
-        class_weight_dict = generate_class_weights(train_generator)
-        
-        # Set ResNet to be base model
-        base_model = ResNet50V2(weights="imagenet", include_top=False)
-        classifier = create_classifier(base_model)
-                
-        # Freeze all base model layers
-        for layer in base_model.layers:
-            layer.trainable = False
-
-        classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
-        classifier.summary()
-        
-        print("Transfer learning")
-        fit_predict_overfitting(classifier, 0)
-        
-        for index in range(149):
-            classifier.layers[index] = True
-        
-        classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
-        classifier.summary()
-        
-        print("Fine Tuning")
-        fit_predict_overfitting(classifier, 1)
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.summary()
+    
+    print("Transfer learning")
+    fit_predict_overfitting(classifier, 0)
+    
+    for index in range(149):
+        classifier.layers[index] = True
+    
+    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+    classifier.summary()
+    
+    print("Fine Tuning")
+    fit_predict_overfitting(classifier, 1)
 
 
 if __name__ == "__main__":
