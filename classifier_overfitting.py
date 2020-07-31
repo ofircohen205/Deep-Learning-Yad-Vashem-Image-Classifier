@@ -245,8 +245,6 @@ def fit_predict_overfitting(classifier, number, class_weight_dict):
         shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_overfitting_{}.log'.format(number))],
         class_weight=class_weight_dict,
-        use_multiprocessing=True,
-        workers=8,
     )
     classifier.save_weights('train_overfitting.h5')
     plt.plot(history.history['accuracy'])

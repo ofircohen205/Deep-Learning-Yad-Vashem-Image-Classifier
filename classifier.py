@@ -180,8 +180,6 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         validation_steps=validation_generator.n // validation_generator.batch_size,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
         class_weight=class_weight_dict,
-        use_multiprocessing=True,
-        workers=8,
     )
     
     classifier.save_weights('train_without_base_model.h5')
