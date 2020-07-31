@@ -123,7 +123,7 @@ def generate_class_weights(train_generator):
         'Carts': 1540,
         'Children': 16525,
         'Corpses': 4606,
-        "German Symbols": 309,
+        "German Symbols": 2476,
         'Gravestones': 5648,
         'Railroad cars': 1018,
         'Signs': 2038,
