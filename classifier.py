@@ -12,6 +12,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from keras import backend as K
+from keras.util import multi_gpu_model
 from random import shuffle
 import tensorflow as tf
 import numpy as np
@@ -247,7 +248,7 @@ def main():
     print("Transfer learning")
     fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
     
-    for index in range(149):
+    for index in range(29):
         classifier.layers[index] = True
     
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])

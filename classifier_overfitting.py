@@ -294,7 +294,7 @@ def main():
     print("Transfer learning")
     fit_predict_overfitting(classifier, 0)
     
-    for index in range(149):
+    for index in range(29):
         classifier.layers[index] = True
     
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
