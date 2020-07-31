@@ -245,6 +245,7 @@ def fit_predict_overfitting(classifier, number, class_weight_dict):
         shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_overfitting_{}.log'.format(number))],
         class_weight=class_weight_dict,
+        use_multiprocessing=True,
         workers=8,
     )
     classifier.save_weights('train_overfitting.h5')
@@ -276,7 +277,6 @@ def fit_predict_overfitting(classifier, number, class_weight_dict):
 ################################################## MAIN ##################################################
 ##########################################################################################################
 def main():
-    tf.debugging.set_log_device_placement(True)
 
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
