@@ -12,6 +12,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix
 from keras import backend as K
+from keras.util import multi_gpu_model
 from random import shuffle
 import tensorflow as tf
 import numpy as np
