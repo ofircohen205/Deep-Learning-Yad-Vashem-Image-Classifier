@@ -287,9 +287,7 @@ def main():
         # Set ResNet to be base model
         base_model = ResNet50V2(weights="imagenet", include_top=False)
         classifier = create_classifier(base_model)
-        
-        parallel_classifier = multi_gpu_model(classifier, gpus=8)
-        
+                
         # Freeze all base model layers
         for layer in base_model.layers:
             layer.trainable = False
@@ -298,7 +296,7 @@ def main():
         classifier.summary()
         
         print("Transfer learning")
-        fit_predict_overfitting(parallel_classifier, 0)
+        fit_predict_overfitting(classifier, 0)
         
         for index in range(149):
             classifier.layers[index] = True
@@ -307,7 +305,7 @@ def main():
         classifier.summary()
         
         print("Fine Tuning")
-        fit_predict_overfitting(parallel_classifier, 1)
+        fit_predict_overfitting(classifier, 1)
 
 
 if __name__ == "__main__":
