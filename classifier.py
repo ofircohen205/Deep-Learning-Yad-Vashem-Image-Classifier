@@ -180,6 +180,7 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
         validation_steps=validation_generator.n // validation_generator.batch_size,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
         class_weight=class_weight_dict,
+        workers=8,
     )
     
     classifier.save_weights('train_without_base_model.h5')
@@ -254,6 +255,7 @@ def main():
         classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
         classifier.summary()
         
+        print("Fine Tuning")
         fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
 
 
