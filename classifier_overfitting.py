@@ -26,19 +26,29 @@ import getpass
 ##############################################################################################################
 ################################################## SETTINGS ##################################################
 ##############################################################################################################
-classes = [ 'Women', 'Children', 'Animals', 'Uniforms', 'Buildings', 'Street scene',
-            'Vehicles', 'Signs', 'Weapons', 'Railroad cars', 'Nazi symbols', 'Gravestones',
-            'Barbed wire fences', 'Corpses', 'German soldiers', 'Armband', 'Snow', 'Carts',
+classes = [ 'Animals',
+            'Buildings',
+            'Carts',
+            'Children',
+            'Corpses',
+            'German Symbols',
+            'Gravestones',
+            'Railroad cars',
+            'Signs',
+            'Snow',
+            "Uniforms",
+            "Vehicles",
+            "Views",
+            'Weapons',
+            'Women',
         ]
 classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
-EPOCHS_LARGE = 25
-EPOCHS_SMALL = 10
-BS = 64
+EPOCHS = 30
+BATCH_SIZE = 64
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
-SEED=42
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if getpass.getuser() == 'assafsh':
@@ -54,23 +64,6 @@ else:
 ###############################################################################################################
 ################################################## FUNCTIONS ##################################################
 ############################################################################################################### 
-def focal_loss(alpha=0.25,gamma=2.0):
-    def focal_crossentropy(y_true, y_pred):
-        bce = K.binary_crossentropy(y_true, y_pred)
-        
-        y_pred = K.clip(y_pred, K.epsilon(), 1.- K.epsilon())
-        p_t = (y_true*y_pred) + ((1-y_true)*(1-y_pred))
-        
-        alpha_factor = 1
-        modulating_factor = 1
-
-        alpha_factor = y_true*alpha + ((1-alpha)*(1-y_true))
-        modulating_factor = K.pow((1-p_t), gamma)
-
-        # compute the final loss and return
-        return K.mean(alpha_factor*modulating_factor*bce, axis=-1)
-    return focal_crossentropy
-
 def generators():
     '''
     This function creates a generator for the dataset - generator for train, generator for validation and generator for test
@@ -96,27 +89,24 @@ def generators():
     train_generator = train_datagen.flow_from_directory(
         train_directory,
         target_size=(IM_WIDTH, IM_HEIGHT),
-        batch_size=BS,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        seed=SEED
     )
 
     # Get images from validation directory and insert into generator
     validation_generator = test_datagen.flow_from_directory(
         validation_directory,
         target_size=(IM_WIDTH, IM_HEIGHT),
-        batch_size=BS,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        seed=SEED
     )
 
     # Get images from test directory and insert into generator
     test_generator = test_datagen.flow_from_directory(
         test_directory,
         target_size=(IM_WIDTH, IM_HEIGHT),
-        batch_size=BS,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        seed=SEED
     )
     return train_generator, validation_generator, test_generator
 ''' End function '''
@@ -127,24 +117,31 @@ def generate_class_weights(train_generator):
     Input:
     Output:
     '''
-    X, Y = train_generator.next()
-    # Instantiate the label encoder
-    le = LabelEncoder()
+    labels_dict = {
+        'Animals': 1559,
+        'Buildings':9052,
+        'Carts': 1540,
+        'Children': 16525,
+        'Corpses': 4606,
+        "German Symbols": 309,
+        'Gravestones': 5648,
+        'Railroad cars': 1018,
+        'Signs': 2038,
+        'Snow': 1716,
+        "Uniforms": 12356,
+        "Vehicles": 3036,
+        "Views": 8776,
+        'Weapons': 1260,
+        'Women': 27642
+    }
 
-    # Fit the label encoder to our label series
-    le.fit(list(classes))
-
-    # Create integer based labels Series
-    y_integers = le.transform(list(classes))
-
-    #print y_integers
-    # Create dict of labels : integer representation
-    labels_and_integers = dict(zip(classes, y_integers))
-
-    print(labels_and_integers)
-    class_weights = compute_class_weight('balanced', np.unique(y_integers), y_integers)
-
-    class_weights_dict = dict(zip(le.transform(list(le.classes_)), class_weights))
+    class_weights_dict = dict()
+    total_samples = train_generator.n
+    mu = 0.15
+    for key in labels_dict.keys():
+        score = math.log(mu * total_samples / float(labels_dict[key]))
+        class_weights_dict[classes.index(key)] = score if score > 1.0 else 1.0
+    
     print(class_weights_dict)
     return class_weights_dict
 ''' End function '''
@@ -241,10 +238,10 @@ def fit_predict_overfitting(classifier, number):
     history = classifier.fit(
         X_train,
         Y_train,
-        steps_per_epoch=X_train.shape[0] // BS,
-        epochs=EPOCHS_LARGE,
+        steps_per_epoch=X_train.shape[0] // BATCH_SIZE,
+        epochs=EPOCHS,
         validation_data=(X_validation, Y_validation),
-        validation_steps=X_validation.shape[0] // BS,
+        validation_steps=X_validation.shape[0] // BATCH_SIZE,
         shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_overfitting_{}.log'.format(number))]
     )
@@ -281,7 +278,7 @@ def main():
     class_weight_dict = generate_class_weights(train_generator)
     
     # Set ResNet to be base model
-    base_model = Xception(weights="imagenet", include_top=False)
+    base_model = ResNet50V2(weights="imagenet", include_top=False)
     classifier = create_classifier(base_model)
     
     # Freeze all base model layers
@@ -294,8 +291,8 @@ def main():
     print("Transfer learning")
     fit_predict_overfitting(classifier, 0)
     
-    for layer in classifier.layers:
-        layer.trainable = True
+    for index in range(149):
+        classifier.layers[index] = True
     
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()

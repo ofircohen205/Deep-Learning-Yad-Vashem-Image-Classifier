@@ -27,32 +27,28 @@ import getpass
 ################################################## SETTINGS ##################################################
 ##############################################################################################################
 classes = [ 'Animals',
-            'Armband',
-            'Barbed wire fences',
             'Buildings',
             'Carts',
             'Children',
             'Corpses',
-            'German Soldiers',
+            'German Symbols',
             'Gravestones',
-            'Nazi Symbols',
             'Railroad cars',
             'Signs',
             'Snow',
-            'Street scene',
             "Uniforms",
             "Vehicles",
+            "Views",
             'Weapons',
             'Women',
         ]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 150, 150
-EPOCHS_LARGE = 30
-BS = 64
+IM_WIDTH, IM_HEIGHT = 224, 224
+EPOCHS = 30
+BATCH_SIZE = 64
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
-SEED=42
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if getpass.getuser() == 'assafsh':
@@ -93,9 +89,8 @@ def generators():
     train_generator = train_datagen.flow_from_directory(
         train_directory,
         target_size=(IM_WIDTH, IM_HEIGHT),
-        batch_size=BS,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        seed=SEED,
         class_mode='binary'
     )
 
@@ -103,9 +98,8 @@ def generators():
     validation_generator = test_datagen.flow_from_directory(
         validation_directory,
         target_size=(IM_WIDTH, IM_HEIGHT),
-        batch_size=BS,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        seed=SEED,
         class_mode='binary'
     )
 
@@ -113,9 +107,8 @@ def generators():
     test_generator = test_datagen.flow_from_directory(
         test_directory,
         target_size=(IM_WIDTH, IM_HEIGHT),
-        batch_size=BS,
+        batch_size=BATCH_SIZE,
         shuffle=True,
-        seed=SEED,
         class_mode='binary'
     )
     return train_generator, validation_generator, test_generator
@@ -127,24 +120,20 @@ def generate_class_weights(train_generator):
     Input:
     Output:
     '''
-
     labels_dict = {
         'Animals': 1559,
-        'Armband':1779,
-        'Barbed wire fences':1080,
         'Buildings':9052,
         'Carts': 1540,
         'Children': 16525,
         'Corpses': 4606,
-        'German Soldiers': 2318,
+        "German Symbols": 309,
         'Gravestones': 5648,
-        'Nazi Symbols': 778,
         'Railroad cars': 1018,
         'Signs': 2038,
         'Snow': 1716,
-        'Street scene': 7696,
         "Uniforms": 12356,
         "Vehicles": 3036,
+        "Views": 8776,
         'Weapons': 1260,
         'Women': 27642
     }
@@ -169,7 +158,6 @@ def create_classifier(base_model):
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
     x = Dense(FC_SIZE, activation='relu')(x)
-    x = Dropout(0.5)(x)
     x = Dense(FC_SIZE//2, activation='relu')(x)
     predictions = Dense(NUM_CLASSES, activation='softmax')(x)
 
@@ -187,7 +175,7 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     history = classifier.fit(
         train_generator,
         steps_per_epoch=train_generator.n // train_generator.batch_size,
-        epochs=EPOCHS_LARGE,
+        epochs=EPOCHS,
         validation_data=validation_generator,
         validation_steps=validation_generator.n // validation_generator.batch_size,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
@@ -256,8 +244,8 @@ def main():
     print("Transfer learning")
     fit_predict(train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
     
-    for layer in classifier.layers:
-        layer.trainable = True
+    for index in range(149):
+        classifier.layers[index] = True
     
     classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
     classifier.summary()
