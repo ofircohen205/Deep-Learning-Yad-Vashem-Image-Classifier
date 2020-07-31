@@ -1,7 +1,7 @@
 #############################################################################################################
 ################################################## IMPORTS ##################################################
 #############################################################################################################
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input, decode_predictions
+from tensorflow.keras.applications.resnet_v2 import ResNet50V2, ResNet152V2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
@@ -46,7 +46,7 @@ classes = sorted(classes)
 
 IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS = 30
-BATCH_SIZE = 256
+BATCH_SIZE = 64*8
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 
@@ -244,7 +244,9 @@ def fit_predict_overfitting(classifier, number, class_weight_dict):
         validation_steps=X_validation.shape[0] // BATCH_SIZE,
         shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_overfitting_{}.log'.format(number))],
-        class_weight=class_weight_dict
+        class_weight=class_weight_dict,
+        use_multiprocessing=True,
+        workers=8,
     )
     classifier.save_weights('train_overfitting.h5')
     plt.plot(history.history['accuracy'])
