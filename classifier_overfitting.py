@@ -278,33 +278,36 @@ def main():
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
     
-    train_generator, validation_generator, test_generator = generators()
-    class_weight_dict = generate_class_weights(train_generator)
-    
-    # Set ResNet to be base model
-    base_model = ResNet50V2(weights="imagenet", include_top=False)
-    classifier = create_classifier(base_model)
-    
-    parallel_classifier = multi_gpu_model(classifier, gpus=8)
-    
-    # Freeze all base model layers
-    for layer in base_model.layers:
-        layer.trainable = False
+    strategy = tf.distribute.MirroredStrategy()
 
-    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
-    classifier.summary()
-    
-    print("Transfer learning")
-    fit_predict_overfitting(parallel_classifier, 0)
-    
-    for index in range(149):
-        classifier.layers[index] = True
-    
-    classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
-    classifier.summary()
-    
-    print("Fine Tuning")
-    fit_predict_overfitting(parallel_classifier, 1)
+    with strategy.scope():
+        train_generator, validation_generator, test_generator = generators()
+        class_weight_dict = generate_class_weights(train_generator)
+        
+        # Set ResNet to be base model
+        base_model = ResNet50V2(weights="imagenet", include_top=False)
+        classifier = create_classifier(base_model)
+        
+        parallel_classifier = multi_gpu_model(classifier, gpus=8)
+        
+        # Freeze all base model layers
+        for layer in base_model.layers:
+            layer.trainable = False
+
+        classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+        classifier.summary()
+        
+        print("Transfer learning")
+        fit_predict_overfitting(parallel_classifier, 0)
+        
+        for index in range(149):
+            classifier.layers[index] = True
+        
+        classifier.compile(optimizer=Adam(), loss=SparseCategoricalCrossentropy(), metrics=['accuracy'])
+        classifier.summary()
+        
+        print("Fine Tuning")
+        fit_predict_overfitting(parallel_classifier, 1)
 
 
 if __name__ == "__main__":
