@@ -126,6 +126,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
         train_examples.append(data[0])
         train_labels.append(data[1])
         batch_index_train += 1
+        if batch_index_train % 100 == 0:
+            print (batch_index_train)
     
     print("Size of train examples and labels: {} {}".format(len(train_examples), len(train_labels)))
     
@@ -134,6 +136,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
         validation_examples.append(data[0])
         validation_labels.append(data[1])
         batch_index_validation += 1
+        if batch_index_validation % 100 == 0:
+            print (batch_index_validation)
     
     print("Size of validation examples and labels: {} {}".format(len(validation_examples), len(validation_labels)))    
     
@@ -142,6 +146,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
         test_examples.append(data[0])
         test_labels.append(data[1])
         batch_index_test += 1
+        if batch_index_test % 100 == 0:
+            print (batch_index_test)
 
     print("Size of test examples and labels: {} {}".format(len(test_examples), len(test_labels)))
         
