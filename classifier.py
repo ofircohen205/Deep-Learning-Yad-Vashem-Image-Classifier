@@ -117,48 +117,73 @@ def generators():
 
 def yield_from_generators(train_generator, validation_generator, test_generator):
     
-    batch_index_train, batch_index_validation, batch_index_test = 0, 0, 0
-    train_examples, validation_examples, test_examples = [], [], []
-    train_labels, validation_labels, test_labels = [], [], []
+    train_df, validation_df, test_df = [], [], []
+    categories_path_train, categories_path_validation, categories_path_test = [], [], []
     
-    while batch_index_train <= train_generator.batch_index:
-        data = train_generator.next()
-        train_examples.append(data[0])
-        train_labels.append(data[1])
-        batch_index_train += 1
-        if batch_index_train % 10 == 0:
-            print(batch_index_train)
-            print("Size of train examples and labels: {} {}".format(len(train_examples), len(train_labels)))
+    for category in classes:
+        if ' ' in category:
+            category = category.replace(" ", "_")
+        categories_path_train.append(os.path.join(train_directory, category))
+        categories_path_validation.append(os.path.join(validation_directory, category))
+        categories_path_test.append(os.path.join(test_directory, category))
     
-    print("Size of train examples and labels: {} {}".format(len(train_examples), len(train_labels)))
+    for class_num, path in enumerate(categories_path_train):
+        dir_path = os.listdir(path)
+        for i, child in enumerate(dir_path):
+            if i == 80:
+                break
+            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
+            x = img_to_array(img)
+            train_df.append([x, class_num])
+            
     
-    while batch_index_validation <= validation_generator.batch_index:
-        data = validation_generator.next()
-        validation_examples.append(data[0])
-        validation_labels.append(data[1])
-        batch_index_validation += 1
-        if batch_index_validation % 10 == 0:
-            print(batch_index_validation)
-            print("Size of validation examples and labels: {} {}".format(len(validation_examples), len(validation_labels)))    
+    for class_num, path in enumerate(categories_path_validation):
+        dir_path = os.listdir(path)
+        for i, child in enumerate(dir_path):
+            if i == 10:
+                break
+            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
+            x = img_to_array(img)
+            validation_df.append([x, class_num])
     
-    print("Size of validation examples and labels: {} {}".format(len(validation_examples), len(validation_labels)))    
+    for class_num, path in enumerate(categories_path_test):
+        dir_path = os.listdir(path)
+        for i, child in enumerate(dir_path):
+            if i == 10:
+                break
+            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
+            x = img_to_array(img)
+            test_df.append([x, class_num])
     
-    while batch_index_test <= test_generator.batch_index:
-        data = test_generator.next()
-        test_examples.append(data[0])
-        test_labels.append(data[1])
-        batch_index_test += 1
-        if batch_index_test % 10 == 0:
-            print(batch_index_test)
-            print("Size of test examples and labels: {} {}".format(len(test_examples), len(test_labels)))
+    shuffle(train_df)
+    shuffle(validation_df)
+    shuffle(test_df)
 
-    print("Size of test examples and labels: {} {}".format(len(test_examples), len(test_labels)))
-        
-    train_ds = tf.data.Dataset.from_tensor_slices((np.asarray(train_examples), np.asarray(np.asarray(train_labels))))
-    validation_ds = tf.data.Dataset.from_tensor_slices((np.asarray(validation_examples), np.asarray(np.asarray(validation_labels))))
-    test_ds = tf.data.Dataset.from_tensor_slices((np.asarray(test_examples), np.asarray(np.asarray(test_labels))))
+    X_train, X_validation, X_test = [], [], []
+    Y_train, Y_validation, Y_test = [], [], []
     
-    return train_ds, validation_ds, test_ds
+    for image, label in train_df:
+        X_train.append(image)
+        Y_train.append(label)
+    
+    for image, label in validation_df:
+        X_validation.append(image)
+        Y_validation.append(label)
+    
+    for image, label in test_df:
+        X_test.append(image)
+        Y_test.append(label)
+    
+    X_train = np.array(X_train) / 255.0
+    Y_train = np.array(Y_train)
+    
+    X_validation = np.array(X_validation) / 255.0
+    Y_validation = np.array(Y_validation)
+    
+    X_test = np.array(X_test) / 255.0
+    Y_test = np.array(Y_test)
+    
+    return X_train, X_validation, X_test, Y_train, Y_validation, Y_test
 ''' End function '''
 
 def generate_class_weights(train_generator):
@@ -213,17 +238,19 @@ def create_classifier(base_model):
 ''' End function '''
 
 
-def fit_predict(train_ds, validation_ds, test_ds, train_generator, validation_generator, test_generator, classifier, class_weight_dict, number):
+def fit_predict(X_train, X_validation, X_test, Y_train, Y_validation, Y_test, train_generator, validation_generator, test_generator, classifier, class_weight_dict, number):
     '''
     Input:
     Output:
     '''    
     history = classifier.fit(
-        train_ds,
-        steps_per_epoch=train_generator.n // train_generator.batch_size,
+        X_train,
+        Y_train,
+        steps_per_epoch=X_train.shape[0] // BATCH_SIZE,
         epochs=EPOCHS,
-        validation_data=validation_generator,
-        validation_steps=validation_generator.n // validation_generator.batch_size,
+        validation_data=(X_validation, Y_validation),
+        validation_steps=X_validation.shape[0] // BATCH_SIZE,
+        shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
         class_weight=class_weight_dict,
         use_multiprocessing=True,
@@ -250,11 +277,11 @@ def fit_predict(train_ds, validation_ds, test_ds, train_generator, validation_ge
     plt.clf()
     print("====================================================")
 
-    history_evaulate = classifier.evaluate(validation_ds)
+    history_evaulate = classifier.evaluate(X_validation, Y_validation)
     print("model evaulation on test:")
     print(history_evaulate)
     print("====================================================")
-    Y_pred = classifier.predict(test_ds)
+    Y_pred = classifier.predict(X_test)
     y_pred = np.argmax(Y_pred, axis=1)
     
     print("====================================================")    
@@ -279,7 +306,7 @@ def main():
     with strategy.scope():
         train_generator, validation_generator, test_generator = generators()
         class_weight_dict = generate_class_weights(train_generator)
-        train_ds, validation_ds, test_ds = yield_from_generators(train_generator, validation_generator, test_generator)
+        X_train, X_validation, X_test, Y_train, Y_validation, Y_test = yield_from_generators(train_generator, validation_generator, test_generator)
         
         # Set ResNet to be base model
         base_model = ResNet50V2(weights="imagenet", include_top=False)
@@ -293,7 +320,7 @@ def main():
         classifier.summary()
         
         print("Transfer learning")
-        fit_predict(train_ds, validation_ds, test_ds, train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
+        fit_predict(X_train, X_validation, X_test, Y_train, Y_validation, Y_test, train_generator, validation_generator, test_generator, classifier, class_weight_dict, 0)
         
         # Unfreeze all base model layers
         for layer in base_model.layers:
@@ -303,7 +330,7 @@ def main():
         classifier.summary()
         
         print("Fine Tuning")
-        fit_predict(train_ds, validation_ds, test_ds, train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
+        fit_predict(X_train, X_validation, X_test, Y_train, Y_validation, Y_test, train_generator, validation_generator, test_generator, classifier, class_weight_dict, 1)
 
 
 if __name__ == "__main__":
