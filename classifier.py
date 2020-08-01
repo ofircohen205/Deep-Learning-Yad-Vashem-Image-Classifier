@@ -44,7 +44,7 @@ classes = [ 'Animals',
         ]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 224, 224
+IM_WIDTH, IM_HEIGHT = 150, 150
 EPOCHS = 30
 BATCH_SIZE = 32*8
 FC_SIZE = 2048
