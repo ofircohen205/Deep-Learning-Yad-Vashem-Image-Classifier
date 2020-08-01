@@ -44,9 +44,9 @@ classes = [ 'Animals',
         ]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 150, 150
+IM_WIDTH, IM_HEIGHT = 224, 224
 EPOCHS = 30
-BATCH_SIZE = 32*8
+BATCH_SIZE = 64*8
 FC_SIZE = 2048
 NUM_CLASSES = len(classes)
 
@@ -244,12 +244,11 @@ def fit_predict(X_train, X_validation, X_test, Y_train, Y_validation, Y_test, tr
     Output:
     '''    
     history = classifier.fit(
-        X_train,
-        Y_train,
-        steps_per_epoch=X_train.shape[0] // BATCH_SIZE,
+        train_generator,
+        steps_per_epoch=train_generator.n // BATCH_SIZE,
         epochs=EPOCHS,
-        validation_data=(X_validation, Y_validation),
-        validation_steps=X_validation.shape[0] // BATCH_SIZE,
+        validation_data=validation_generator,
+        validation_steps=validation_generator.n // BATCH_SIZE,
         shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
         class_weight=class_weight_dict,
@@ -277,11 +276,11 @@ def fit_predict(X_train, X_validation, X_test, Y_train, Y_validation, Y_test, tr
     plt.clf()
     print("====================================================")
 
-    history_evaulate = classifier.evaluate(X_validation, Y_validation)
+    history_evaulate = classifier.evaluate(validation_generator)
     print("model evaulation on test:")
     print(history_evaulate)
     print("====================================================")
-    Y_pred = classifier.predict(X_test)
+    Y_pred = classifier.predict(test_generator)
     y_pred = np.argmax(Y_pred, axis=1)
     
     print("====================================================")    
@@ -306,7 +305,8 @@ def main():
     with strategy.scope():
         train_generator, validation_generator, test_generator = generators()
         class_weight_dict = generate_class_weights(train_generator)
-        X_train, X_validation, X_test, Y_train, Y_validation, Y_test = yield_from_generators(train_generator, validation_generator, test_generator)
+        X_train, X_validation, X_test, Y_train, Y_validation, Y_test = None, None, None, None, None, None
+        # X_train, X_validation, X_test, Y_train, Y_validation, Y_test = yield_from_generators(train_generator, validation_generator, test_generator)
         
         # Set ResNet to be base model
         base_model = ResNet50V2(weights="imagenet", include_top=False)
