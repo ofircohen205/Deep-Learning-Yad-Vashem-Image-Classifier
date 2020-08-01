@@ -130,8 +130,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     for class_num, path in enumerate(categories_path_train):
         dir_path = os.listdir(path)
         for i, child in enumerate(dir_path):
-            if i == 80:
-                break
+            if i % 100 == 0:
+                print("number of train_df: {}". format(len(train_df)))
             img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
             x = img_to_array(img)
             train_df.append([x, class_num])
@@ -140,8 +140,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     for class_num, path in enumerate(categories_path_validation):
         dir_path = os.listdir(path)
         for i, child in enumerate(dir_path):
-            if i == 10:
-                break
+            if i % 100 == 0:
+                print("number of validation_df: {}". format(len(validation_df)))
             img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
             x = img_to_array(img)
             validation_df.append([x, class_num])
@@ -149,8 +149,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     for class_num, path in enumerate(categories_path_test):
         dir_path = os.listdir(path)
         for i, child in enumerate(dir_path):
-            if i == 10:
-                break
+            if i % 100 == 0:
+                print("number of test_df: {}". format(len(test_df)))
             img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
             x = img_to_array(img)
             test_df.append([x, class_num])
