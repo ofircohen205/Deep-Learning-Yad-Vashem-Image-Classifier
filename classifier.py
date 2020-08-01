@@ -115,6 +115,43 @@ def generators():
 ''' End function '''
 
 
+def yield_from_generators(train_generator, validation_generator, test_generator):
+    
+    batch_index_train, batch_index_validation, batch_index_test = 0, 0, 0
+    train_examples, validation_examples, test_examples = [], [], []
+    train_labels, validation_labels, test_labels = [], [], []
+    
+    while batch_index_train <= train_generator.batch_index:
+        data = train_generator.next()
+        train_examples.append(data[0])
+        train_labels.append(data[1])
+        batch_index_train += 1
+    
+    print("Size of train examples and labels: {} {}".format(len(train_examples), len(train_labels)))
+    
+    while batch_index_validation <= validation_generator.batch_index:
+        data = validation_generator.next()
+        validation_examples.append(data[0])
+        validation_labels.append(data[1])
+        batch_index_validation += 1
+    
+    print("Size of validation examples and labels: {} {}".format(len(validation_examples), len(validation_labels)))    
+    
+    while batch_index_test <= test_generator.batch_index:
+        data = test_generator.next()
+        test_examples.append(data[0])
+        test_labels.append(data[1])
+        batch_index_test += 1
+
+    print("Size of test examples and labels: {} {}".format(len(test_examples), len(test_labels)))
+        
+    train_ds = tf.data.Dataset.from_tensor_slices((np.asarray(train_examples), np.asarray(np.asarray(train_labels))))
+    validation_ds = tf.data.Dataset.from_tensor_slices((np.asarray(validation_examples), np.asarray(np.asarray(validation_labels))))
+    test_ds = tf.data.Dataset.from_tensor_slices((np.asarray(test_examples), np.asarray(np.asarray(test_labels))))
+    
+    return train_ds, validation_ds, test_ds
+''' End function '''
+
 def generate_class_weights(train_generator):
     '''
     Input:
@@ -139,7 +176,7 @@ def generate_class_weights(train_generator):
     }
 
     class_weights_dict = dict()
-    total_samples = train_generator.n
+    total_samples = sum(labels_dict.values())
     mu = 0.15
     for key in labels_dict.keys():
         score = math.log(mu * total_samples / float(labels_dict[key]))
@@ -172,8 +209,10 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     Input:
     Output:
     '''
+    train_ds, validation_ds, test_ds = yield_from_generators(train_generator, validation_generator, test_generator)
+    
     history = classifier.fit(
-        train_generator,
+        train_ds,
         steps_per_epoch=train_generator.n // train_generator.batch_size,
         epochs=EPOCHS,
         validation_data=validation_generator,
@@ -204,11 +243,11 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     plt.clf()
     print("====================================================")
 
-    history_evaulate = classifier.evaluate(validation_generator)
+    history_evaulate = classifier.evaluate(validation_ds)
     print("model evaulation on test:")
     print(history_evaulate)
     print("====================================================")
-    Y_pred = classifier.predict(test_generator)
+    Y_pred = classifier.predict(test_ds)
     y_pred = np.argmax(Y_pred, axis=1)
     
     print("====================================================")    

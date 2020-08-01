@@ -136,7 +136,7 @@ def generate_class_weights(train_generator):
     }
 
     class_weights_dict = dict()
-    total_samples = train_generator.n
+    total_samples = sum(labels_dict.values())
     mu = 0.15
     for key in labels_dict.keys():
         score = math.log(mu * total_samples / float(labels_dict[key]))
