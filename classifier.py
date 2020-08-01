@@ -215,14 +215,76 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     Input:
     Output:
     '''
-    train_ds, validation_ds, test_ds = yield_from_generators(train_generator, validation_generator, test_generator)
+    # train_ds, validation_ds, test_ds = yield_from_generators(train_generator, validation_generator, test_generator)
+    
+    train_df, validation_df, test_df = [], [], []
+    categories_path_train, categories_path_validation, categories_path_test = [], [], []
+    
+    for category in classes:
+        if ' ' in category:
+            category = category.replace(" ", "_")
+        categories_path_train.append(os.path.join(train_directory, category))
+        categories_path_validation.append(os.path.join(validation_directory, category))
+        categories_path_test.append(os.path.join(test_directory, category))
+    
+    for class_num, path in enumerate(categories_path_train):
+        dir_path = os.listdir(path)
+        for i, child in enumerate(dir_path):
+            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
+            x = img_to_array(img)
+            train_df.append([x, class_num])
+            
+    
+    for class_num, path in enumerate(categories_path_validation):
+        dir_path = os.listdir(path)
+        for i, child in enumerate(dir_path):
+            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
+            x = img_to_array(img)
+            validation_df.append([x, class_num])
+    
+    for class_num, path in enumerate(categories_path_test):
+        dir_path = os.listdir(path)
+        for i, child in enumerate(dir_path):
+            img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
+            x = img_to_array(img)
+            test_df.append([x, class_num])
+    
+    shuffle(train_df)
+    shuffle(validation_df)
+    shuffle(test_df)
+
+    X_train, X_validation, X_test = [], [], []
+    Y_train, Y_validation, Y_test = [], [], []
+    
+    for image, label in train_df:
+        X_train.append(image)
+        Y_train.append(label)
+    
+    for image, label in validation_df:
+        X_validation.append(image)
+        Y_validation.append(label)
+    
+    for image, label in test_df:
+        X_test.append(image)
+        Y_test.append(label)
+    
+    X_train = np.array(X_train) / 255.0
+    Y_train = np.array(Y_train)
+    
+    X_validation = np.array(X_validation) / 255.0
+    Y_validation = np.array(Y_validation)
+    
+    X_test = np.array(X_test) / 255.0
+    Y_test = np.array(Y_test)
     
     history = classifier.fit(
-        train_ds,
-        steps_per_epoch=train_generator.n // train_generator.batch_size,
+        X_train,
+        Y_train,
+        steps_per_epoch=X_train.shape[0] // BATCH_SIZE,
         epochs=EPOCHS,
-        validation_data=validation_generator,
-        validation_steps=validation_generator.n // validation_generator.batch_size,
+        validation_data=(X_validation, Y_validation),
+        validation_steps=X_validation.shape[0] // BATCH_SIZE,
+        shuffle=True,
         callbacks=[tf.keras.callbacks.CSVLogger('training_{}.log'.format(number))],
         class_weight=class_weight_dict,
         use_multiprocessing=True,
@@ -249,11 +311,11 @@ def fit_predict(train_generator, validation_generator, test_generator, classifie
     plt.clf()
     print("====================================================")
 
-    history_evaulate = classifier.evaluate(validation_ds)
+    history_evaulate = classifier.evaluate(X_validation, Y_validation)
     print("model evaulation on test:")
     print(history_evaulate)
     print("====================================================")
-    Y_pred = classifier.predict(test_ds)
+    Y_pred = classifier.predict(X_test)
     y_pred = np.argmax(Y_pred, axis=1)
     
     print("====================================================")    
