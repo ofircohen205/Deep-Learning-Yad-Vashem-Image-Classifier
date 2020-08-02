@@ -163,21 +163,21 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     Y_train, Y_validation, Y_test = [], [], []
     
     for image, label in train_df:
-		if X_train.shape[0] == 79404:
-			break
+	if X_train.shape[0] == 79404:
+		break
         X_train.append(image)
         Y_train.append(label)
     
     for image, label in validation_df:
         if X_validation.shape[0] == 9828:
-			break
-		X_validation.append(image)
+		break
+	X_validation.append(image)
         Y_validation.append(label)
     
     for image, label in test_df:
         if X_test.shape[0] == 9828:
-			break
-		X_test.append(image)
+		break
+	X_test.append(image)
         Y_test.append(label)
     
     X_train = np.array(X_train) / 255.0
