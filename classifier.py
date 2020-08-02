@@ -164,21 +164,21 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     
     for image, label in train_df:
 		# only divided by 156
-        if len(X_train) == 79404:
+        if len(X_train) == 7950:
             break
         X_train.append(image)
         Y_train.append(label)
     
     for image, label in validation_df:
         # only divided by 156
-        if len(X_validation) == 9828:
+        if len(X_validation) == 9800:
             break
         X_validation.append(image)
         Y_validation.append(label)
     
     for image, label in test_df:
 		# only divided by 156
-        if len(X_test) == 9828:
+        if len(X_test) == 9800:
             break
         X_test.append(image)
         Y_test.append(label)
