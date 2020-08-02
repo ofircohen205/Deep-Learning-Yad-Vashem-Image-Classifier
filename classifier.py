@@ -130,8 +130,6 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     for class_num, path in enumerate(categories_path_train):
         dir_path = os.listdir(path)
         for i, child in enumerate(dir_path):
-            if i == 79404:
-                break
             if i % 100 == 0:
                 print("number of train_df: {}". format(len(train_df)))
             img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
@@ -165,15 +163,21 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     Y_train, Y_validation, Y_test = [], [], []
     
     for image, label in train_df:
+		if X_train.shape[0] == 79404:
+			break
         X_train.append(image)
         Y_train.append(label)
     
     for image, label in validation_df:
-        X_validation.append(image)
+        if X_validation.shape[0] == 9828:
+			break
+		X_validation.append(image)
         Y_validation.append(label)
     
     for image, label in test_df:
-        X_test.append(image)
+        if X_test.shape[0] == 9828:
+			break
+		X_test.append(image)
         Y_test.append(label)
     
     X_train = np.array(X_train) / 255.0
