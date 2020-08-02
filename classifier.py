@@ -295,14 +295,14 @@ def fit_predict(X_train, X_validation, X_test, Y_train, Y_validation, Y_test, tr
     
     print("====================================================")    
     print("Confusion matrix:")
-    print(confusion_matrix(test_generator.classes, y_pred))
+    print(confusion_matrix(Y_test, y_pred))
     with open("confusion_matrix_{}.log".format(number), 'w') as f:
-        f.write(confusion_matrix(test_generator.classes, y_pred))
+        f.write(confusion_matrix(Y_test, y_pred))
     print("====================================================")    
     print("Classification report:")
-    print(classification_report(test_generator.classes, y_pred, target_names=classes))
+    print(classification_report(Y_test, y_pred, target_names=classes))
     with open("classification_report{}.log".format(number), 'w') as f:
-        f.write(classification_report(test_generator.classes, y_pred, target_names=classes))
+        f.write(classification_report(Y_test, y_pred, target_names=classes))
 ''' End function '''
 
 
