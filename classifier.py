@@ -130,6 +130,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
     for class_num, path in enumerate(categories_path_train):
         dir_path = os.listdir(path)
         for i, child in enumerate(dir_path):
+            if i == 79404:
+                break
             if i % 100 == 0:
                 print("number of train_df: {}". format(len(train_df)))
             img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
