@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os, math
 import getpass
-import seaborn as sns; set sns.set()
+import seaborn as sns; sns.set()
 
 # from trains import Task
 # task = Task.init(project_name="DL_CNN_Final_Project", task_name="Test_Model")
