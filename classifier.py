@@ -332,7 +332,7 @@ def main():
 		X_train, X_validation, X_test, Y_train, Y_validation, Y_test = yield_from_generators(train_generator, validation_generator, test_generator)
 		
 		# Set ResNet to be base model
-		base_model = ResNet50V2(weights="imagenet", include_top=False)
+		base_model = ResNet152V2(weights="imagenet", include_top=False)
 		classifier = create_classifier(base_model)
 		
 		# Freeze all base model layers
