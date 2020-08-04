@@ -1,7 +1,7 @@
 #############################################################################################################
 ################################################## IMPORTS ##################################################
 #############################################################################################################
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2, ResNet152V2, preprocess_input, decode_predictions
+from tensorflow.keras.applications.resnet_v2 import ResNet50V2, ResNet101V2, ResNet152V2, preprocess_input, decode_predictions
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
@@ -45,7 +45,7 @@ classes = [ 'Animals',
 		]
 classes = sorted(classes)
 
-IM_WIDTH, IM_HEIGHT = 224, 224
+IM_WIDTH, IM_HEIGHT = 150, 150
 EPOCHS = 30
 BATCH_SIZE = 64*8
 FC_SIZE = 2048
@@ -131,6 +131,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
 	for class_num, path in enumerate(categories_path_train):
 		dir_path = os.listdir(path)
 		for i, child in enumerate(dir_path):
+			if i > 79000:
+				break
 			if i % 100 == 0:
 				print("number of train_df: {}". format(len(train_df)))
 			img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
@@ -141,6 +143,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
 	for class_num, path in enumerate(categories_path_validation):
 		dir_path = os.listdir(path)
 		for i, child in enumerate(dir_path):
+			if i > 9800:
+				break
 			if i % 100 == 0:
 				print("number of validation_df: {}". format(len(validation_df)))
 			img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
@@ -150,6 +154,8 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
 	for class_num, path in enumerate(categories_path_test):
 		dir_path = os.listdir(path)
 		for i, child in enumerate(dir_path):
+			if i > 9800:
+				break
 			if i % 100 == 0:
 				print("number of test_df: {}". format(len(test_df)))
 			img = load_img(os.path.join(path, child), target_size=(IM_HEIGHT, IM_WIDTH, 3))
@@ -157,8 +163,6 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
 			test_df.append([x, class_num])
 	
 	shuffle(train_df)
-	shuffle(validation_df)
-	shuffle(test_df)
 
 	X_train, X_validation, X_test = [], [], []
 	Y_train, Y_validation, Y_test = [], [], []
