@@ -165,7 +165,7 @@ def yield_from_generators(train_generator, validation_generator, test_generator)
 	
 	for image, label in train_df:
 		# only divided by 156
-		if len(X_train) == 77950:
+		if len(X_train) == 79000:
 			break
 		X_train.append(image)
 		Y_train.append(label)
