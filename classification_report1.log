@@ -1,0 +1,21 @@
+                precision    recall  f1-score   support
+
+       Animals       0.08      0.06      0.07       156
+     Buildings       0.38      0.39      0.39       906
+         Carts       0.28      0.21      0.24       154
+      Children       0.30      0.35      0.32      1653
+       Corpses       0.44      0.54      0.49       461
+German Symbols       0.12      0.15      0.13       310
+   Gravestones       0.81      0.57      0.67       565
+ Railroad cars       0.28      0.41      0.33       102
+         Signs       0.36      0.45      0.40       204
+          Snow       0.28      0.42      0.33       172
+      Uniforms       0.32      0.20      0.25      1236
+      Vehicles       0.23      0.14      0.18       304
+         Views       0.27      0.44      0.34       878
+       Weapons       0.07      0.04      0.05       126
+         Women       0.45      0.38      0.41      2573
+
+      accuracy                           0.36      9800
+     macro avg       0.31      0.32      0.31      9800
+  weighted avg       0.37      0.35      0.36      9800
