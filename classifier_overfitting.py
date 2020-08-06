@@ -5,8 +5,7 @@ from tensorflow.keras.applications.resnet_v2 import ResNet50V2, ResNet152V2, pre
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Nadam
-from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy
-from tensorflow.losses import SigmoidFocalCrossEntropy
+from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy, BinaryCrossentropy, SigmoidFocalCrossEntropy
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.utils import to_categorical
 from sklearn.utils.class_weight import compute_class_weight
